@@ -1,0 +1,45 @@
+{
+  "name": "clawsats-indelible",
+  "version": "0.3.1",
+  "description": "Persistent blockchain memory for ClawSats AI agents — powered by Indelible. BRC standards, reputation, escrow, messaging, oracles.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./capabilities": "./src/capabilities.js",
+    "./bridge": "./src/bridge.js",
+    "./middleware": "./src/middleware.js",
+    "./identity": "./src/identity.js",
+    "./auth": "./src/auth.js",
+    "./signing": "./src/signing.js",
+    "./encryption": "./src/encryption.js",
+    "./discovery": "./src/discovery.js",
+    "./reputation": "./src/reputation.js",
+    "./escrow": "./src/escrow.js",
+    "./messaging": "./src/messaging.js",
+    "./oracle": "./src/oracle.js"
+  },
+  "dependencies": {
+    "@bsv/sdk": "^1.10.1",
+    "node-fetch": "^3.3.2"
+  },
+  "keywords": [
+    "clawsats",
+    "indelible",
+    "bsv",
+    "ai-agent",
+    "memory",
+    "blockchain",
+    "micropayments"
+  ],
+  "files": [
+    "src/",
+    "examples/"
+  ],
+  "author": "zcoolz",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/indelible-one/clawsats-indelible"
+  }
+}
