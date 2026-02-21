@@ -118,7 +118,11 @@ import { createIndeliblePaymentMiddleware } from 'clawsats-indelible/middleware'
 
 const paywall = createIndeliblePaymentMiddleware({
   operatorAddress: 'YOUR_ADDRESS',
-  price: 15
+  calculatePrice: (req) => {
+    if (req.path === '/api/save') return 15  // 15 sats
+    if (req.path === '/api/load') return 10  // 10 sats
+    return 0
+  }
 })
 
 app.post('/api/save', paywall, (req, res) => {

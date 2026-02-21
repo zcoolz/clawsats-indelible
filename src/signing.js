@@ -49,10 +49,11 @@ export function signAction(config) {
  * @param {string} config.action - Action name
  * @param {string} config.timestamp - ISO timestamp from signAction
  * @param {object} config.payload - Original payload
- * @returns {boolean} true if signature is valid
+ * @param {string} [config.expectedPublicKey] - Optional: verify the signer matches this public key
+ * @returns {object} { valid, signerPubKey, identityBound } — or boolean (true/false) if expectedPublicKey not provided (backwards compatible)
  */
 export function verifyAction(config) {
-  const { signature, action, timestamp, payload } = config
+  const { signature, action, timestamp, payload, expectedPublicKey } = config
 
   if (!signature) throw new Error('signature required')
   if (!action) throw new Error('action required')
@@ -61,5 +62,22 @@ export function verifyAction(config) {
   const messageBytes = Utils.toArray(message, 'utf8')
   const sigBytes = Utils.toArray(signature, 'hex')
 
-  return SignedMessage.verify(messageBytes, sigBytes)
+  const valid = SignedMessage.verify(messageBytes, sigBytes)
+
+  // If expectedPublicKey provided, do identity-binding check
+  if (expectedPublicKey) {
+    // Extract signer pubkey from BRC-77 signature (bytes 4-36)
+    const signerPubKey = Utils.toHex(sigBytes.slice(4, 4 + 33))
+    const identityBound = signerPubKey === expectedPublicKey
+
+    return {
+      valid: valid && identityBound,
+      identityBound,
+      signerPubKey,
+      expectedPublicKey
+    }
+  }
+
+  // Backwards compatible: return boolean when no expectedPublicKey
+  return valid
 }

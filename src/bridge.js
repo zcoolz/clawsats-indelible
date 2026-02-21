@@ -1,8 +1,13 @@
 /**
  * IndelibleMemoryBridge
- * Drop-in replacement for ClawSats' OnChainMemory (CLAWMEM_V1)
+ * Blockchain memory adapter for ClawSats agents via the Indelible server API.
  *
- * Advantages over OnChainMemory:
+ * NOTE: This is NOT a drop-in replacement for ClawSats' OnChainMemory.
+ * OnChainMemory writes OP_RETURN data directly to chain via the local wallet.
+ * IndelibleMemoryBridge saves via Indelible's HTTP API (chunked, indexed, encrypted).
+ * The API surface (save/load/list) is similar but the underlying mechanism differs.
+ *
+ * Capabilities beyond OnChainMemory:
  * - Chunked transactions (unlimited payload via delta saves)
  * - SPV bridge (no WhatsOnChain dependency)
  * - Structured JSONL with session chaining
@@ -32,8 +37,8 @@ export class IndelibleMemoryBridge {
   }
 
   /**
-   * Save agent memory to blockchain
-   * Drop-in replacement for OnChainMemory.save(key, data)
+   * Save agent memory to blockchain via Indelible API
+   * Similar interface to OnChainMemory.save(key, data) but uses HTTP, not local OP_RETURN
    *
    * @param {string} key - Agent identifier / memory key
    * @param {Array|object} data - Messages array or raw data object
@@ -58,8 +63,8 @@ export class IndelibleMemoryBridge {
   }
 
   /**
-   * Load agent memory from blockchain
-   * Drop-in replacement for OnChainMemory.load(key)
+   * Load agent memory from blockchain via Indelible API
+   * Similar interface to OnChainMemory.load(key) but returns formatted multi-session context
    *
    * @param {string} key - Agent identifier (unused in v1, loads by address)
    * @param {object} options

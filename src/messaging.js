@@ -59,12 +59,18 @@ export function createChannel(config) {
     /**
      * Receive and decrypt a message on this channel
      *
+     * NOTE: The recipientWif must be the RECIPIENT's private key, not the sender's.
+     * The sender creates the channel, but only the recipient can decrypt messages
+     * sent through it.
+     *
+     * @param {string} recipientWif - Recipient's private key (WIF) — must be the recipient, not sender
      * @param {string} encryptedHex - Encrypted envelope hex
      * @returns {object} Decrypted and verified message
      */
-    receive(encryptedHex) {
+    receive(recipientWif, encryptedHex) {
+      if (!recipientWif) throw new Error('recipientWif required — must be the recipient\'s key, not the sender\'s')
       return receiveMessage({
-        recipientWif: senderWif,
+        recipientWif,
         encryptedHex
       })
     }

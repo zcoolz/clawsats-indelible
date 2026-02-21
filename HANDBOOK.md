@@ -457,11 +457,10 @@ const { encrypted } = channel.send('task_request', {
   payment: 500  // sats offered
 })
 
-// Recipient decrypts and verifies
-const received = channel.receive(encrypted)
-// Wait — this won't work. The RECIPIENT needs their own key to decrypt.
+// Recipient decrypts and verifies (requires recipient's own WIF)
+const received = channel.receive('L1agentB...', encrypted)
 
-// Here's the right way — direct functions:
+// Or use direct functions for more control:
 const msg = sendMessage({
   senderWif: 'L1agentA...',
   recipientPubKey: '02agentB...',

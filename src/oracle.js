@@ -10,7 +10,19 @@
  * Consumers verify the signature to trust the data.
  */
 
-import { PrivateKey, SignedMessage, Hash, Utils } from '@bsv/sdk'
+import { PrivateKey, PublicKey, SignedMessage, Hash, Utils } from '@bsv/sdk'
+
+/**
+ * Extract the signer's public key from a BRC-77 signed message.
+ * The sender pubkey is embedded at bytes 4-36 of the signature.
+ *
+ * @param {number[]} sigBytes - Signature as byte array
+ * @returns {string} Signer's compressed public key (hex)
+ */
+function extractSignerPubKey(sigBytes) {
+  const pubKeyBytes = sigBytes.slice(4, 4 + 33)
+  return Utils.toHex(pubKeyBytes)
+}
 
 /**
  * Create an oracle attestation — sign a real-world fact
@@ -82,6 +94,10 @@ export function verifyOracleAttestation(config) {
 
   const valid = SignedMessage.verify(messageBytes, sigBytes)
 
+  // Identity-binding check: verify the claimed oraclePubKey matches the actual signer
+  const actualSigner = extractSignerPubKey(sigBytes)
+  const identityBound = actualSigner === attestation.oraclePubKey
+
   const dataHash = Utils.toHex(
     Hash.sha256(Utils.toArray(JSON.stringify({
       dataType: attestation.dataType,
@@ -90,8 +106,10 @@ export function verifyOracleAttestation(config) {
   )
 
   return {
-    valid,
+    valid: valid && identityBound,
+    identityBound,
     oraclePubKey: attestation.oraclePubKey,
+    actualSigner,
     dataType: attestation.dataType,
     value: attestation.value,
     timestamp: attestation.timestamp,
