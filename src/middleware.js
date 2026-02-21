@@ -16,8 +16,11 @@
 import crypto from 'crypto'
 import { Transaction, P2PKH, Utils } from '@bsv/sdk'
 
-/** ClawSats protocol fee: 2 sats per paid call */
-const CLAWSATS_PROTOCOL_FEE = 2
+/** ClawSats protocol fee constants — canonical values from ClawSats protocol */
+const FEE_SATS = 2
+const FEE_KID = 'clawsats-fee-v1'
+const FEE_DERIVATION_SUFFIX = 'fee'
+const FEE_IDENTITY_KEY = '0307102dc99293edba7f75bf881712652879c151b454ebf5d8e7a0ba07c4d17364'
 
 /**
  * Parse a transaction string in any supported format:
@@ -61,8 +64,7 @@ function parseTransaction(txString) {
  * @param {string} config.operatorAddress - BSV address to receive payments
  * @param {function} config.calculatePrice - (req) => sats required
  * @param {object} [config.wallet] - Optional BRC-29 wallet for internalizeAction verification
- * @param {boolean} [config.requireProtocolFee=false] - If true, verify ClawSats 2-sat protocol fee output
- * @param {string} [config.feeAddress] - Address for protocol fee output (required if requireProtocolFee=true)
+ * @param {boolean} [config.requireProtocolFee=false] - If true, verify ClawSats 2-sat protocol fee output exists
  * @returns {function} Express middleware
  */
 export function createIndeliblePaymentMiddleware(config) {
@@ -70,14 +72,12 @@ export function createIndeliblePaymentMiddleware(config) {
     operatorAddress,
     calculatePrice,
     wallet = null,
-    requireProtocolFee = false,
-    feeAddress = null
+    requireProtocolFee = false
   } = config
   const usedPrefixes = new Set()
 
   if (!operatorAddress) throw new Error('operatorAddress required')
   if (!calculatePrice) throw new Error('calculatePrice function required')
-  if (requireProtocolFee && !feeAddress) throw new Error('feeAddress required when requireProtocolFee is true')
 
   return async (req, res, next) => {
     const price = await calculatePrice(req)
@@ -99,11 +99,12 @@ export function createIndeliblePaymentMiddleware(config) {
       res.set('x-bsv-payment-derivation-prefix', prefix)
       res.set('x-bsv-payment-address', operatorAddress)
 
-      // Include fee info if protocol fee is required
+      // ClawSats protocol fee headers (exact names from WalletManager.ts)
       if (requireProtocolFee) {
-        res.set('x-clawsats-fee-required', 'true')
-        res.set('x-clawsats-fee-sats', String(CLAWSATS_PROTOCOL_FEE))
-        res.set('x-clawsats-fee-address', feeAddress)
+        res.set('x-clawsats-fee-satoshis-required', String(FEE_SATS))
+        res.set('x-clawsats-fee-kid', FEE_KID)
+        res.set('x-clawsats-fee-derivation-suffix', FEE_DERIVATION_SUFFIX)
+        res.set('x-clawsats-fee-identity-key', FEE_IDENTITY_KEY)
       }
 
       return res.status(402).json({
@@ -112,8 +113,8 @@ export function createIndeliblePaymentMiddleware(config) {
         satoshisRequired: price,
         operatorAddress,
         ...(requireProtocolFee ? {
-          protocolFee: CLAWSATS_PROTOCOL_FEE,
-          feeAddress
+          protocolFee: FEE_SATS,
+          feeIdentityKey: FEE_IDENTITY_KEY
         } : {}),
         description: `Pay ${price} sats to use Indelible memory service`
       })
@@ -148,15 +149,15 @@ export function createIndeliblePaymentMiddleware(config) {
         try {
           const result = await wallet.internalizeAction({
             tx,
-            outputs: tx.outputs.map((output, i) => ({
-              outputIndex: i,
+            outputs: [{
+              outputIndex: 0,
               protocol: 'wallet payment',
               paymentRemittance: {
                 derivationPrefix,
                 derivationSuffix: derivationSuffix || 'clawsats',
                 senderIdentityKey: req.headers['x-bsv-identity-key'] || ''
               }
-            })),
+            }],
             description: `Payment: ${price} sats`
           })
 
@@ -197,23 +198,24 @@ export function createIndeliblePaymentMiddleware(config) {
         })
       }
 
-      // Verify protocol fee output if required
+      // Verify protocol fee output structurally (any output beyond index 0 with >= FEE_SATS)
+      // Provider can't internalize the fee (doesn't hold treasury key) — just verify it exists.
+      // The fee wallet holder does full BRC-29 derivation verification when sweeping.
       if (requireProtocolFee) {
-        const feeScript = p2pkh.lock(feeAddress).toHex()
-        let feePaid = 0
-        for (const output of tx.outputs) {
-          if (output.lockingScript.toHex() === feeScript) {
-            feePaid += output.satoshis
+        let feeOutputFound = false
+        for (let i = 1; i < tx.outputs.length; i++) {
+          if (tx.outputs[i].satoshis >= FEE_SATS) {
+            feeOutputFound = true
+            break
           }
         }
-        if (feePaid < CLAWSATS_PROTOCOL_FEE) {
-          return res.status(400).json({
-            error: `Protocol fee missing: ${feePaid} sats fee paid, ${CLAWSATS_PROTOCOL_FEE} required`,
-            feePaid,
-            feeRequired: CLAWSATS_PROTOCOL_FEE
+        if (!feeOutputFound) {
+          return res.status(402).json({
+            status: 'error',
+            code: 'ERR_MISSING_FEE',
+            description: `Payment must include a ${FEE_SATS}-sat fee output to the ClawSats protocol. See x-clawsats-fee-identity-key header.`
           })
         }
-        req.protocolFee = { feePaid, feeAddress }
       }
 
       usedPrefixes.add(derivationPrefix)
