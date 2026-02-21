@@ -731,7 +731,7 @@ createOracleAttestation, verifyOracleAttestation, buildOracleConsensus, requestO
 
 ## License
 
-MIT — do whatever you want with it.
+Open BSV License v4 — see [LICENSE](LICENSE)
 
 ---
 

@@ -144,4 +144,4 @@ node examples/agent-demo.js [indelible-url]
 
 ## License
 
-MIT
+Open BSV License v4 — see [LICENSE](LICENSE)
