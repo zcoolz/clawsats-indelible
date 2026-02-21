@@ -1,6 +1,6 @@
 {
   "name": "clawsats-indelible",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Persistent blockchain memory for ClawSats AI agents — powered by Indelible. BRC standards, reputation, escrow, messaging, oracles.",
   "type": "module",
   "main": "src/index.js",

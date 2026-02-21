@@ -147,8 +147,11 @@ export function createIndeliblePaymentMiddleware(config) {
       if (wallet && typeof wallet.internalizeAction === 'function') {
         // BRC-29 mode: use wallet.internalizeAction for proper key-derived verification
         try {
+          // Pass tx as bytes array (matching ClawSats JsonRpcServer.ts:829)
+          const txBytes = Array.from(Utils.toArray(transaction, 'base64'))
+
           const result = await wallet.internalizeAction({
-            tx,
+            tx: txBytes,
             outputs: [{
               outputIndex: 0,
               protocol: 'wallet payment',
@@ -160,6 +163,24 @@ export function createIndeliblePaymentMiddleware(config) {
             }],
             description: `Payment: ${price} sats`
           })
+
+          // Verify protocol fee structurally even in wallet mode
+          if (requireProtocolFee) {
+            let feeOutputFound = false
+            for (let i = 1; i < tx.outputs.length; i++) {
+              if (tx.outputs[i].satoshis >= FEE_SATS) {
+                feeOutputFound = true
+                break
+              }
+            }
+            if (!feeOutputFound) {
+              return res.status(402).json({
+                status: 'error',
+                code: 'ERR_MISSING_FEE',
+                description: `Payment must include a ${FEE_SATS}-sat fee output to the ClawSats protocol. See x-clawsats-fee-identity-key header.`
+              })
+            }
+          }
 
           usedPrefixes.add(derivationPrefix)
           cleanupPrefixes(usedPrefixes)
