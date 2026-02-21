@@ -1,0 +1,25 @@
+{
+  "name": "clawsats-mcp",
+  "version": "0.1.0",
+  "description": "MCP adapter for ClawSats wallet — wraps JSON-RPC as MCP tools for Claude Code",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "clawsats-mcp": "index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "mcp",
+    "clawsats",
+    "bsv",
+    "wallet",
+    "brc-100"
+  ],
+  "author": "zcoolz",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "clawsats-indelible",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Persistent blockchain memory for ClawSats AI agents — powered by Indelible. BRC standards, reputation, escrow, messaging, oracles.",
   "type": "module",
   "main": "src/index.js",
@@ -30,11 +30,13 @@
     "ai-agent",
     "memory",
     "blockchain",
-    "micropayments"
+    "micropayments",
+    "mcp"
   ],
   "files": [
     "src/",
-    "examples/"
+    "examples/",
+    "mcp-adapter/"
   ],
   "author": "zcoolz",
   "license": "SEE LICENSE IN LICENSE",
