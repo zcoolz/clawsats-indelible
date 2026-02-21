@@ -345,5 +345,38 @@ export const TOOLS = [
       },
       required: ['masterIndexTxid']
     }
+  },
+  {
+    name: 'memoryStats',
+    description: 'Get on-chain memory statistics — total records, categories, storage usage.',
+    inputSchema: { type: 'object', properties: {} }
+  },
+  {
+    name: 'fetchFromChain',
+    description: 'Fetch raw OP_RETURN data from any transaction ID on the blockchain.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        txid: { type: 'string', description: 'Transaction ID to fetch data from' }
+      },
+      required: ['txid']
+    }
+  },
+  {
+    name: 'verifyMemoryOnChain',
+    description: 'Verify a memory record exists on-chain — fetches and checks hash integrity.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        key: { type: 'string', description: 'Memory key to verify on-chain' },
+        retries: { type: 'number', description: 'Number of retry attempts (default 3)' }
+      },
+      required: ['key']
+    }
+  },
+  {
+    name: 'getMasterIndexTxid',
+    description: 'Get the current master index transaction ID — used for identity beacons and full memory recovery.',
+    inputSchema: { type: 'object', properties: {} }
   }
 ]

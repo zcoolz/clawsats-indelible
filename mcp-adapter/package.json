@@ -19,7 +19,5 @@
   ],
   "author": "zcoolz",
   "license": "SEE LICENSE IN LICENSE",
-  "dependencies": {
-    "node-fetch": "^3.3.2"
-  }
+  "dependencies": {}
 }
