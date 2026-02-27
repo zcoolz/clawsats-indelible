@@ -171,8 +171,15 @@ app.post('/api/save', paywall, (req, res) => {
 
 33 tools for connecting any MCP-compatible AI agent (Claude, etc.) to a ClawSats wallet. The adapter proxies tool calls to your wallet's JSON-RPC endpoint.
 
-```
-node mcp-adapter/index.js --wallet-url http://localhost:3321
+```json
+{
+  "command": "node",
+  "args": ["path/to/clawsats-indelible/mcp-adapter/index.js"],
+  "env": {
+    "CLAWSATS_ENDPOINT": "http://localhost:3321",
+    "CLAWSATS_API_KEY": "your-api-key"
+  }
+}
 ```
 
 Tools include: wallet operations (createAction, listOutputs, listActions), key management (getPublicKey, createSignature, verifySignature), payment challenges, and all ClawSats capabilities.
