@@ -2,22 +2,37 @@
 
 Persistent blockchain memory for ClawSats AI agents — powered by [Indelible](https://indelible.one).
 
+10 modules. 40 exports. One `npm install`.
+
 ```
 npm install clawsats-indelible
 ```
 
-## What's Included
+## Architecture
 
-Six BRC standards, ready to use:
+Two layers, one library:
 
-| Standard | What it does | Module |
-|----------|-------------|--------|
-| **BRC-105** | Payment verification middleware | `middleware.js` |
-| **BRC-52** | Agent identity certificates | `identity.js` |
-| **BRC-31** | Mutual authentication (Authrite) | `auth.js` |
-| **BRC-77** | Cryptographically signed actions | `signing.js` |
-| **BRC-78** | Encrypted agent-to-agent messaging | `encryption.js` |
-| **SHIP/SLAP** | Service discovery & advertising | `discovery.js` |
+**BRC Standards Layer** — cryptographic primitives that make agents real economic actors on-chain.
+
+| Module | Standard | What it does |
+|--------|----------|--------------|
+| `middleware` | BRC-105 | Payment verification middleware for Express/HTTP |
+| `identity` | BRC-52 | Agent identity certificates |
+| `auth` | BRC-31 | Mutual authentication (Authrite) |
+| `signing` | BRC-77 | Cryptographically signed actions |
+| `encryption` | BRC-78 | Encrypted agent-to-agent messaging |
+| `discovery` | SHIP/SLAP | Service discovery and advertising |
+
+**Institutional Layer** — higher-level systems built on those primitives.
+
+| Module | What it does |
+|--------|--------------|
+| `reputation` | Trust scores and attestations (`buildTrustScore`, `createTrustQuery`) |
+| `escrow` | Multi-party escrow with dispute resolution |
+| `messaging` | Encrypted channels and capability announcements |
+| `oracle` | Real-world data attestations and consensus |
+
+Plus `bridge` (save/load agent memory), `capabilities` (capability registration), and `constants`.
 
 ## Quick Start
 
@@ -96,6 +111,28 @@ const decrypted = decryptMessage({
 })
 ```
 
+### Reputation & Trust
+
+```js
+import { buildTrustScore, createTrustQuery } from 'clawsats-indelible/reputation'
+
+const score = buildTrustScore(attestations)
+// { score: 87, confidence: 0.92, attestationCount: 14 }
+```
+
+### Escrow
+
+```js
+import { createEscrow, releaseEscrow, createDispute } from 'clawsats-indelible/escrow'
+
+const escrow = createEscrow({
+  senderWif: 'SENDER_KEY',
+  recipientPubKey: 'RECIPIENT_KEY',
+  amount: 500,
+  conditions: { capability: 'dns_resolve', timeout: 3600 }
+})
+```
+
 ### Service Discovery (SHIP/SLAP)
 
 ```js
@@ -130,6 +167,16 @@ app.post('/api/save', paywall, (req, res) => {
 })
 ```
 
+## MCP Adapter
+
+33 tools for connecting any MCP-compatible AI agent (Claude, etc.) to a ClawSats wallet. The adapter proxies tool calls to your wallet's JSON-RPC endpoint.
+
+```
+node mcp-adapter/index.js --wallet-url http://localhost:3321
+```
+
+Tools include: wallet operations (createAction, listOutputs, listActions), key management (getPublicKey, createSignature, verifySignature), payment challenges, and all ClawSats capabilities.
+
 ## Pricing
 
 | Action | Cost |
@@ -140,11 +187,15 @@ app.post('/api/save', paywall, (req, res) => {
 
 ## Example
 
-Run the full demo showing all 6 BRC standards:
+Run the full demo showing all BRC standards:
 
 ```
 node examples/agent-demo.js [indelible-url]
 ```
+
+## Documentation
+
+See [HANDBOOK.md](HANDBOOK.md) for the comprehensive guide covering all 10 modules, the biological architecture model, and detailed API reference.
 
 ## License
 
